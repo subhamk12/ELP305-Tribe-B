@@ -1,4 +1,6 @@
-#include "BluetoothSerial.h"
+#include "BluetoothSerial.h"\
+
+//range is from 320 outside to cycle stand;;;
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
