@@ -4,7 +4,7 @@
 
 Adafruit_MPU6050 mpu;
 
-const float dt = 0.5; // time interval in seconds
+const float dt = 0.01; // time interval in seconds
 float acceleration = 0;
 float velocity_x = 0;
 float velocity_y = 0;
@@ -12,8 +12,18 @@ float distance = 0;
 float acceleration_x=0;
 float acceleration_y=0;
 float velocity=0;
+float motion=0;
+
+
+int red_led = 14;
+int green_led = 27;
+int blue_led = 26;
+int flickerDelay = 10;  // delay between intensity changes (in milliseconds)
 
 void setup(void) {
+  pinMode(red_led, OUTPUT);
+  pinMode(green_led, OUTPUT);
+  pinMode(blue_led, OUTPUT);
   Serial.begin(115200);
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
@@ -28,6 +38,7 @@ void setup(void) {
     }
   }
   Serial.println("MPU6050 Found!");
+
 
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   Serial.print("Accelerometer range set to: ");
@@ -63,6 +74,8 @@ void setup(void) {
   }
   */
 
+
+
   mpu.setFilterBandwidth(MPU6050_BAND_5_HZ);
   Serial.print("Filter bandwidth set to: ");
   switch (mpu.getFilterBandwidth()) {
@@ -93,19 +106,83 @@ void setup(void) {
   delay(100);
 }
 
+void led_color(int red_value, int green_value,int blue_value)
+{
+  analogWrite(red_led,red_value);
+  analogWrite(green_led,green_value);
+  analogWrite(blue_led,blue_value);
+}
+
+void red_color()
+{
+  digitalWrite(red_led, LOW);
+  digitalWrite(green_led, HIGH);
+  digitalWrite(blue_led, HIGH);
+  delay(1000);
+}
+
+void blinking_red_color()
+{
+  digitalWrite(red_led, LOW);
+  digitalWrite(green_led, HIGH);
+  digitalWrite(blue_led, HIGH);
+  delay(flickerDelay);
+  digitalWrite(red_led,HIGH);
+  digitalWrite(blue_led,HIGH);
+  digitalWrite(green_led,HIGH);
+  delay(flickerDelay);
+}
+
+void green_color()
+{
+  digitalWrite(red_led, HIGH);
+  digitalWrite(green_led, LOW);
+  digitalWrite(blue_led, HIGH);
+  delay(1000);
+}
+
+void blinking_green_color()
+{
+  digitalWrite(red_led, HIGH);
+  digitalWrite(green_led, LOW);
+  digitalWrite(blue_led, HIGH);
+  delay(flickerDelay);
+  digitalWrite(red_led,HIGH);
+  digitalWrite(blue_led,HIGH);
+  digitalWrite(green_led,HIGH);
+  delay(flickerDelay);
+}
+
+void white_color()
+{
+  digitalWrite(red_led, LOW);
+  digitalWrite(green_led, LOW);
+  digitalWrite(blue_led, LOW);
+  delay(1000);
+}
 
 void loop() {
  sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
   
-  acceleration_x = a.acceleration.x; // Assuming motion is along x-axis, adjust accordingly for other axes
-  acceleration_y = a.acceleration.y;
+  acceleration_x = a.acceleration.x - 1.79; // Assuming motion is along x-axis, adjust accordingly for other axes
+  acceleration_y = a.acceleration.y + 0.27;
   acceleration = sqrt(pow(acceleration_x,2)+pow(acceleration_y,2));
   velocity_x += acceleration_x * dt;
   velocity_y += acceleration_y * dt;
   velocity = sqrt(pow(velocity_x,2)+pow(velocity_y,2));
   distance += velocity * dt;
-  
+
+  if (acceleration<0.7){
+    motion=0;
+    blinking_red_color();
+  } else {
+    motion=1;
+    blinking_green_color();
+  }
+
+
+
   Serial.print("Acceleration: ");
   Serial.print(acceleration);
   Serial.print("Acceleration_x: ");
@@ -114,10 +191,11 @@ void loop() {
   Serial.print(acceleration_y);
   Serial.print(" m/s^2, Velocity: ");
   Serial.print(velocity);
+  Serial.print("motion:");
+  Serial.print(motion);
   Serial.print(" m/s, Displacement: ");
   Serial.print(distance);
   Serial.println(" meters");
   
   delay(dt * 1000); // delay to maintain constant time interval
 }
-
