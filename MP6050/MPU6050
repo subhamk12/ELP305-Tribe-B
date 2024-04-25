@@ -11,9 +11,10 @@ float velocity_y = 0;
 float distance = 0;
 float acceleration_x=0;
 float acceleration_y=0;
+float acceleration_z=0;
 float velocity=0;
 float motion=0;
-
+unsigned long startTime=0;
 
 int red_led = 14;
 int green_led = 27;
@@ -153,6 +154,18 @@ void blinking_green_color()
   delay(flickerDelay);
 }
 
+void blinking_blue_color()
+{
+  digitalWrite(red_led, HIGH);
+  digitalWrite(green_led, HIGH);
+  digitalWrite(blue_led, LOW);
+  delay(flickerDelay);
+  digitalWrite(red_led,HIGH);
+  digitalWrite(blue_led,HIGH);
+  digitalWrite(green_led,HIGH);
+  delay(flickerDelay);
+}
+
 void white_color()
 {
   digitalWrite(red_led, LOW);
@@ -165,30 +178,45 @@ void loop() {
  sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
   
-  acceleration_x = a.acceleration.x - 1.79; // Assuming motion is along x-axis, adjust accordingly for other axes
-  acceleration_y = a.acceleration.y + 0.27;
-  acceleration = sqrt(pow(acceleration_x,2)+pow(acceleration_y,2));
+  acceleration_x = a.acceleration.x -0.4; // Assuming motion is along x-axis, adjust accordingly for other axes
+  acceleration_y = a.acceleration.y +0.3;
+  acceleration_z = a.acceleration.z -0.3;
+  acceleration = sqrt(pow(acceleration_x,2)+pow(acceleration_y,2)+pow(acceleration_z,2));
   velocity_x += acceleration_x * dt;
   velocity_y += acceleration_y * dt;
   velocity = sqrt(pow(velocity_x,2)+pow(velocity_y,2));
   distance += velocity * dt;
-
-  if (acceleration<0.7){
+  if (acceleration<10.2 && millis()-startTime>30000){
     motion=0;
     blinking_red_color();
-  } else {
-    motion=1;
+    // while (motion=0){
+    //   if ((millis()-startTime)>5000){
+    //     blinking_red_color();
+    //   }
+    //   else {
+    //     blinking_blue_color();
+    //   }
+    // }
+  }
+  else if(acceleration<10.2 && millis()-startTime<30000){
     blinking_green_color();
   }
+  else {
+    motion=1;
+    blinking_green_color();
+    startTime=millis();
+  }
 
-
-
+  Serial.print("Starttime: ");
+  Serial.print(startTime);
   Serial.print("Acceleration: ");
   Serial.print(acceleration);
   Serial.print("Acceleration_x: ");
   Serial.print(acceleration_x);
   Serial.print("Acceleration_y: ");
   Serial.print(acceleration_y);
+  Serial.print("Acceleration_z: ");
+  Serial.print(acceleration_z);
   Serial.print(" m/s^2, Velocity: ");
   Serial.print(velocity);
   Serial.print("motion:");
